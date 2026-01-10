@@ -1,4 +1,7 @@
 import { app } from "../../../scripts/app.js";
+// Note: ComfyWidgets is an internal module and may change in future ComfyUI versions
+// Using it until an official public API is provided by ComfyUI
+// See: https://github.com/comfyanonymous/ComfyUI/discussions (widgets API discussion)
 import { ComfyWidgets } from "../../../scripts/widgets.js";
 
 // Displays input text on a node

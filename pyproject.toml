@@ -1,0 +1,51 @@
+[project]
+name = "RES4LYF"
+version = "1.0.0"
+description = "Superior sampling with RES4LYF: The power of BongMath for ComfyUI"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "Custom Commercial Restriction License - See LICENSE file"}
+authors = [
+    {name = "ClownsharkBatwing"},
+]
+keywords = ["comfyui", "sampling", "diffusion", "image-generation", "res4lyf"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Multimedia :: Graphics",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "opencv-python",
+    "matplotlib",
+    "pywavelets",
+    "numpy",
+]
+
+[project.urls]
+Homepage = "https://github.com/ClownsharkBatwing/RES4LYF"
+Repository = "https://github.com/ClownsharkBatwing/RES4LYF"
+Issues = "https://github.com/ClownsharkBatwing/RES4LYF/issues"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["RES4LYF"]
+
+[tool.setuptools.package-data]
+RES4LYF = ["*.json", "web/**/*", "example_workflows/**/*"]
+
+# Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "clownsharkbatwing"
+DisplayName = "RES4LYF - Superior Sampling with BongMath"
+Icon = ""
