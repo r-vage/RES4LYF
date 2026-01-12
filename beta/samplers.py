@@ -582,6 +582,8 @@ class SharkSampler:
                     disable_pbar=disable_pbar, seed=noise_seed
                 )
 
+                samples = samples.to(comfy.model_management.intermediate_device())
+
                 out = latent_x.copy()
                 out["samples"] = samples
 
