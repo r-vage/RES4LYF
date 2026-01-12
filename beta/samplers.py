@@ -284,8 +284,9 @@ class SharkSampler:
                 sampler.extra_options.pop("cfg_cw", None) 
 
             
-            if not EO("disable_dummy_sampler_init"):
-                sampler_null = comfy.samplers.ksampler("rk_beta", 
+            is_nested_input = latent_image is not None and 'samples' in latent_image and isinstance(latent_image['samples'], comfy.nested_tensor.NestedTensor)
+            if not EO("disable_dummy_sampler_init") and not is_nested_input:
+                sampler_null = comfy.samplers.ksampler("rk_beta",
                     {
                         "sampler_mode": "NULL",
                     })
