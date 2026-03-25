@@ -21,7 +21,7 @@ try:
     
     try:
         if hasattr(_comfy_samplers, "SCHEDULER_NAMES") and "beta57" not in _comfy_samplers.SCHEDULER_NAMES:
-            _comfy_samplers.SCHEDULER_NAMES = _comfy_samplers.SCHEDULER_NAMES + ["beta57"]
+            _comfy_samplers.SCHEDULER_NAMES.append("beta57")
     except Exception:
         # don't fail import for odd edge-cases
         pass
@@ -29,7 +29,7 @@ try:
     try:
         # KSampler.SCHEDULERS is sometimes used by node type lists
         if hasattr(_comfy_samplers, "KSampler") and hasattr(_comfy_samplers.KSampler, "SCHEDULERS") and "beta57" not in _comfy_samplers.KSampler.SCHEDULERS:
-            _comfy_samplers.KSampler.SCHEDULERS = _comfy_samplers.KSampler.SCHEDULERS + ["beta57"]
+            _comfy_samplers.KSampler.SCHEDULERS.append("beta57")
     except Exception:
         pass
     
@@ -131,9 +131,9 @@ def init(check_imports=None):
     # monkey patch comfy.samplers.calculate_sigmas with custom implementation
     comfy.samplers.calculate_sigmas = calculate_sigmas_RES4LYF
     if "beta57" not in comfy.samplers.SCHEDULER_NAMES:
-        comfy.samplers.SCHEDULER_NAMES = comfy.samplers.SCHEDULER_NAMES + ["beta57"]
+        comfy.samplers.SCHEDULER_NAMES.append("beta57")
     if "beta57" not in comfy.samplers.KSampler.SCHEDULERS:
-        comfy.samplers.KSampler.SCHEDULERS = comfy.samplers.KSampler.SCHEDULERS + ["beta57"]
+        comfy.samplers.KSampler.SCHEDULERS.append("beta57")
 
     return True
 

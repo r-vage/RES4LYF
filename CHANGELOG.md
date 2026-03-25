@@ -5,6 +5,26 @@ All notable changes to this fork of RES4LYF will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- fix: ImageSharpenFS and all frequency separation nodes output float64 tensors causing dtype mismatch downstream (#219, #229)
+  - Cast outputs to float32 in `Frequency_Separation_Hard_Light`, `Frequency_Separation_Hard_Light_LAB`,
+    `Frequency_Separation_Hard_Light_Vivid`, `Frequency_Separation_Linear_Light`, `Frequency_Separation_FFT`,
+    and `RGB_to_LAB` classes in `images.py`
+  - Internal processing stays float64 for numerical precision; only outputs are cast
+  - Also fixes MPS (Mac) compatibility since MPS doesn't support float64
+
+- fix: scheduler list concatenation breaks references held by SwarmUI and other tools (#220)
+  - Changed `list = list + ["beta57"]` to `list.append("beta57")` in 4 locations in `res4lyf.py`
+  - Preserves in-place references so schedulers registered after RES4LYF are still visible
+
+- fix: FlashAttention custom_op registration causes dispatcher assert on Torch 2.9+ (#225, #210)
+  - Added check for already-registered `torch.ops.flash_attention.flash_attn` before calling `@torch.library.custom_op`
+  - If already registered, uses plain wrapper function instead of re-registering
+  - Broadened exception catch from `AttributeError` to `Exception` for schema assertion errors
+  - File: `sd/attention.py`
+
+- fix: SyntaxWarning from invalid escape sequence `\h` in Python 3.12+ (#185)
+  - Changed `"$Δ \hat{t}$"` to `r"$Δ \hat{t}$"` (raw string) in `helper_sigma_preview_image_preproc.py`
+
 - Applied PR #223: Fixed CUDA device mismatch errors in `beta/rk_method_beta.py`
   - Added `comfy.model_management` import
   - Modified two `__call__` methods to ensure all tensors are moved to same device before computation

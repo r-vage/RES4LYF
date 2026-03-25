@@ -516,17 +516,26 @@ def attention_sage(q, k, v, heads, mask=None, attn_precision=None, skip_reshape=
 
 
 try:
-    @torch.library.custom_op("flash_attention::flash_attn", mutates_args=())
-    def flash_attn_wrapper(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor,
-                    dropout_p: float = 0.0, causal: bool = False) -> torch.Tensor:
-        return flash_attn_func(q, k, v, dropout_p=dropout_p, causal=causal)
+    # Check if the custom_op is already registered (e.g. by ComfyUI core or another extension)
+    # to avoid the dispatcher schema assert that breaks FlashAttention on Torch 2.9+ (#225)
+    _flash_op_already_registered = hasattr(torch.ops, 'flash_attention') and hasattr(torch.ops.flash_attention, 'flash_attn')
+    if _flash_op_already_registered:
+        # Reuse the already-registered op to avoid duplicate registration errors
+        def flash_attn_wrapper(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor,
+                        dropout_p: float = 0.0, causal: bool = False) -> torch.Tensor:
+            return flash_attn_func(q, k, v, dropout_p=dropout_p, causal=causal)
+    else:
+        @torch.library.custom_op("flash_attention::flash_attn", mutates_args=())
+        def flash_attn_wrapper(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor,
+                        dropout_p: float = 0.0, causal: bool = False) -> torch.Tensor:
+            return flash_attn_func(q, k, v, dropout_p=dropout_p, causal=causal)
 
 
-    @flash_attn_wrapper.register_fake
-    def flash_attn_fake(q, k, v, dropout_p=0.0, causal=False):
-        # Output shape is the same as q
-        return q.new_empty(q.shape)
-except AttributeError as error:
+        @flash_attn_wrapper.register_fake
+        def flash_attn_fake(q, k, v, dropout_p=0.0, causal=False):
+            # Output shape is the same as q
+            return q.new_empty(q.shape)
+except Exception as error:
     FLASH_ATTN_ERROR = error
 
     def flash_attn_wrapper(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor,

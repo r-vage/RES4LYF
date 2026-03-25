@@ -474,7 +474,7 @@ class Frequency_Separation_Hard_Light:
         if original is None:
             original = hard_light_blend(low_pass.to(torch.float64).to('cuda'), high_pass.to(torch.float64).to('cuda'))
 
-        return (high_pass, original, low_pass,)
+        return (high_pass.to(torch.float32), original.to(torch.float32), low_pass.to(torch.float32),)
 
 
 class Frequency_Separation_Hard_Light_LAB:
@@ -524,7 +524,7 @@ class Frequency_Separation_Hard_Light_LAB:
             lab_original = denormalize_lab(lab_original_normalized)
             original = lab_to_rgb(lab_original).permute(0, 2, 3, 1)
 
-        return (high_pass, original, low_pass)
+        return (high_pass.to(torch.float32), original.to(torch.float32), low_pass.to(torch.float32))
     
     
 class Frame_Select:
@@ -639,7 +639,7 @@ class Image_Channels_LAB:
             LAB = torch.cat([L,A,B], dim=1)
             RGB = lab_to_rgb(LAB.to(torch.float64)).permute(0,2,3,1)
 
-        return (RGB, L, A, B,)
+        return (RGB.to(torch.float32), L.to(torch.float32), A.to(torch.float32), B.to(torch.float32),)
     
     
 
@@ -671,7 +671,7 @@ class Frequency_Separation_Vivid_Light:
         if original is None:
             original = hard_light_blend(high_pass.to(torch.float64), low_pass.to(torch.float64))
 
-        return (high_pass, original, low_pass,)
+        return (high_pass.to(torch.float32), original.to(torch.float32), low_pass.to(torch.float32),)
 
 
 class Frequency_Separation_Linear_Light:
@@ -703,7 +703,7 @@ class Frequency_Separation_Linear_Light:
         if original is None:
             original = linear_light_blend(low_pass.to(torch.float64).to('cuda'), high_pass.to(torch.float64).to('cuda'))
 
-        return (high_pass, original, low_pass,)
+        return (high_pass.to(torch.float32), original.to(torch.float32), low_pass.to(torch.float32),)
 
 
 class Frequency_Separation_FFT:
@@ -737,7 +737,7 @@ class Frequency_Separation_FFT:
         if original is None:
             original = low_pass + high_pass
 
-        return (high_pass, original, low_pass,)
+        return (high_pass.to(torch.float32), original.to(torch.float32), low_pass.to(torch.float32),)
     
     
 

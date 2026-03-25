@@ -1,6 +1,6 @@
 [project]
 name = "RES4LYF"
-version = "1.0.0"
+version = "1.0.1"
 description = "Superior sampling with RES4LYF: The power of BongMath for ComfyUI"
 readme = "README.md"
 requires-python = ">=3.9"
