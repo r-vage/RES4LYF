@@ -710,8 +710,26 @@ class EmptyConditioningGenerator:
                 self.text_len_base = 128
                 self.text_channels = 4096
                 #self.pooled_len    = 1
+            elif hasattr(comfy.supported_models, 'ZImage') and isinstance(self.model_config, comfy.supported_models.ZImage):
+                # ZImage uses Qwen3_4B text encoder (hidden_size=2560)
+                self.text_len_base = 256
+                self.text_channels = 2560
+            elif hasattr(comfy.supported_models, 'Lumina2') and isinstance(self.model_config, comfy.supported_models.Lumina2):
+                # Lumina2 uses Gemma2_2B text encoder (hidden_size=2304)
+                self.text_len_base = 256
+                self.text_channels = 2304
             else:
-                raise ValueError(f"Unknown model config: {type(self.model_config)}")
+                if conditioning is not None:
+                    self.device        = conditioning[0][0].device
+                    self.dtype         = conditioning[0][0].dtype
+                    self.text_len_base = conditioning[0][0].shape[-2]
+                    if 'pooled_output' in conditioning[0][1]:
+                        self.pooled_len = conditioning[0][1]['pooled_output'].shape[-1]
+                    else:
+                        self.pooled_len = 0
+                    self.text_channels = conditioning[0][0].shape[-1]
+                else:
+                    raise ValueError(f"Unknown model config: {type(self.model_config)}. Pass conditioning as fallback.")
         elif conditioning is not None:
             self.device        = conditioning[0][0].device
             self.dtype         = conditioning[0][0].dtype
@@ -741,6 +759,7 @@ class EmptyConditioningGenerator:
         else:
             return [[
                 torch.zeros((1, self.text_len_base, self.text_channels)),
+                {}
             ]]
 
     def get_empty_conditionings(self, count):
@@ -1181,7 +1200,8 @@ class ClownRegionalConditioning_AB:
             cond = None
 
         elif mask is not None:
-            EmptyCondGen = EmptyConditioningGenerator(model)
+            sample_cond = next((c for c in [conditioning_A, conditioning_B] if c is not None), None)
+            EmptyCondGen = EmptyConditioningGenerator(model, conditioning=sample_cond)
             conditioning_A, conditioning_B = EmptyCondGen.zero_none_conditionings_([conditioning_A, conditioning_B])
             
             cond = copy.deepcopy(conditioning_A)
@@ -1415,7 +1435,8 @@ class ClownRegionalConditioning_ABC:
 
         elif mask_A is not None:
             
-            EmptyCondGen = EmptyConditioningGenerator(model)
+            sample_cond = next((c for c in [conditioning_A, conditioning_B, conditioning_C] if c is not None), None)
+            EmptyCondGen = EmptyConditioningGenerator(model, conditioning=sample_cond)
             conditioning_A, conditioning_B, conditioning_C = EmptyCondGen.zero_none_conditionings_([conditioning_A, conditioning_B, conditioning_C])
 
             conditioning = copy.deepcopy(conditioning_A)
@@ -1747,7 +1768,8 @@ class ClownRegionalConditionings:
         floors  = F.pad(floors,  (0, MAX_STEPS), value=0.0)
         floors  = torch.cat((prepend, floors), dim=0)
 
-        EmptyCondGen = EmptyConditioningGenerator(model)
+        sample_cond = next((c for c in cond_list if c is not None), None)
+        EmptyCondGen = EmptyConditioningGenerator(model, conditioning=sample_cond)
         cond_list = EmptyCondGen.zero_none_conditionings_(cond_list)
         
         conditioning = copy.deepcopy(cond_list[0])

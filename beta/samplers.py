@@ -300,7 +300,8 @@ class SharkSampler:
                 
             if positive is None or negative is None:
                 from ..conditioning import EmptyConditioningGenerator
-                EmptyCondGen       = EmptyConditioningGenerator(work_model)
+                sample_cond        = next((c for c in [positive, negative] if c is not None), None)
+                EmptyCondGen       = EmptyConditioningGenerator(work_model, conditioning=sample_cond)
                 positive, negative = EmptyCondGen.zero_none_conditionings_([positive, negative])
 
             if cfg < 0:
@@ -468,7 +469,8 @@ class SharkSampler:
             
             if pos_cond is None or neg_cond is None:
                 from ..conditioning import EmptyConditioningGenerator
-                EmptyCondGen       = EmptyConditioningGenerator(work_model)
+                sample_cond        = next((c for c in [pos_cond, neg_cond] if c is not None), None)
+                EmptyCondGen       = EmptyConditioningGenerator(work_model, conditioning=sample_cond)
                 pos_cond, neg_cond = EmptyCondGen.zero_none_conditionings_([pos_cond, neg_cond])
 
 

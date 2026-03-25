@@ -5,6 +5,24 @@ All notable changes to this fork of RES4LYF will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- fix: `EmptyConditioningGenerator` missing metadata dict for models without pooled output (#250)
+  - The `pooled_len == 0` branch returned `[[tensor]]` instead of `[[tensor, {}]]`
+  - ComfyUI expects every conditioning entry to be `[tensor, dict]` — missing dict caused
+    `IndexError: list index out of range` in `cond_has_hooks()` when negative conditioning was absent
+  - Affects ZImage, Lumina2, and any future models without pooled output
+  - File: `conditioning.py`
+
+- fix: ClownRegionalConditioning2 fails with ZImage/Lumina2 models — "Unknown model config" (#250)
+  - Added ZImage (text_channels=2560) and Lumina2 (text_channels=2304) to `EmptyConditioningGenerator` model type chain
+  - Unknown model types now fall back to extracting dimensions from conditioning instead of crashing
+  - Updated all 5 callers to pass sample conditioning as fallback parameter
+  - Files: `conditioning.py`, `beta/samplers.py`
+
+- fix: Remove deprecated `comfy.ldm.chroma.layers` import before ComfyUI removes the stubs (#206)
+  - `ChromaSingleStreamBlock` / `ChromaDoubleStreamBlock` were already `None` (deprecated)
+  - Import was dead code — removed to prevent future startup failure
+  - File: `models.py`
+
 - fix: ImageSharpenFS and all frequency separation nodes output float64 tensors causing dtype mismatch downstream (#219, #229)
   - Cast outputs to float32 in `Frequency_Separation_Hard_Light`, `Frequency_Separation_Hard_Light_LAB`,
     `Frequency_Separation_Hard_Light_Vivid`, `Frequency_Separation_Linear_Light`, `Frequency_Separation_FFT`,

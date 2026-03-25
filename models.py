@@ -44,16 +44,13 @@ from comfy.ldm.wan.model import WanAttentionBlock, WanI2VCrossAttention, WanMode
 from .wan.model import ReWanAttentionBlock, ReWanI2VCrossAttention, ReWanModel, ReWanRawSelfAttention, ReWanSelfAttention, ReWanSlidingSelfAttention, ReWanT2VSlidingCrossAttention, ReWanT2VCrossAttention, ReWanT2VRawCrossAttention
 
 from comfy.ldm.chroma.model import Chroma
-from comfy.ldm.chroma.layers import SingleStreamBlock as ChromaSingleStreamBlock, DoubleStreamBlock as ChromaDoubleStreamBlock
 
 from .chroma.model import ReChroma
 from .chroma.layers import ReChromaSingleStreamBlock, ReChromaDoubleStreamBlock
 
 from comfy.ldm.lightricks.model import LTXVModel
-#from comfy.ldm.chroma.layers import SingleStreamBlock as ChromaSingleStreamBlock, DoubleStreamBlock as ChromaDoubleStreamBlock
 
 from .lightricks.model import ReLTXVModel
-#from .chroma.layers import ReChromaSingleStreamBlock, ReChromaDoubleStreamBlock
 
 from comfy.ldm.modules.diffusionmodules.openaimodel import UNetModel, ResBlock
 from comfy.ldm.modules.attention import SpatialTransformer, BasicTransformerBlock, CrossAttention
