@@ -182,6 +182,8 @@ class ConditioningZeroAndTruncate:
             if pooled_output is not None:
                 d["pooled_output"] = torch.zeros((1,2048), dtype=t[0].dtype, device=t[0].device)
                 n = [torch.zeros((1,154,4096), dtype=t[0].dtype, device=t[0].device), d]
+            else:
+                n = [torch.zeros_like(t[0]), d]
             c.append(n)
         return (c, )
 
