@@ -1730,8 +1730,8 @@ def sample_rk_beta(
                                     for _ in range(noise_scaling_cycles-1):
                                         sub_lying_su, sub_lying_sigma, sub_lying_sd, sub_lying_alpha_ratio = NS.get_sde_substep(NS.s_[row], sub_lying_sd, noise_scaling_eta, noise_scaling_mode)
                                     lying_s_[row+1] = sub_lying_sd
+                                    lying_sd = sub_lying_sd
                                 substep_noise_scaling_ratio = NS.s_[row+1]/lying_s_[row+1]
-                                lying_sd = sub_lying_sd
                                 if RK.multistep_stages > 0:
                                     try:
                                         substep_noise_scaling_ratio = sigma_next/lying_sd                   #fails with resample?
