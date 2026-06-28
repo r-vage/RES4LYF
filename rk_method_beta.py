@@ -78,7 +78,7 @@ class RK_Method_Beta:
         self.row_offset                  : Optional[int]            = None
 
         self.cfg_cw                      : float                    = 1.0
-        self.extra_args                  : Optional[Dict[str, Any]] = None
+        self.extra_args                  : Dict[str, Any] = {}
 
         self.extra_options               : str                      = extra_options
         self.EO                          : ExtraOptions             = ExtraOptions(extra_options)

@@ -33,6 +33,7 @@ if "beta57" not in SCHEDULER_HANDLERS:
     if new_scheduler_name not in SCHEDULER_NAMES:
         SCHEDULER_NAMES.append(new_scheduler_name)
 
+from . import res4lyf
 from .res4lyf import RESplain
 
 #torch.use_deterministic_algorithms(True)
@@ -100,6 +101,9 @@ NODE_CLASS_MAPPINGS = {
     "CLIPTextEncodeFluxUnguided"          : conditioning.CLIPTextEncodeFluxUnguided,
     "ConditioningOrthoCollin"             : conditioning.ConditioningOrthoCollin,
 
+    "ConditioningAverage"                 : conditioning.ConditioningAverage,
+    "ConditioningCombine"                 : conditioning.ConditioningCombine,
+    "ConditioningSetTimestepRange"        : conditioning.ConditioningSetTimestepRange,
     "ConditioningAverageScheduler"        : conditioning.ConditioningAverageScheduler,
     "ConditioningMultiply"                : conditioning.ConditioningMultiply,
     "ConditioningAdd"                     : conditioning.ConditioningAdd,

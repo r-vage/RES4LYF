@@ -1,8 +1,8 @@
-import torch
-import torch.nn.functional as F
+import torch #type: ignore
+import torch.nn.functional as F #type: ignore
 import math
 
-from torch  import Tensor
+from torch  import Tensor #type: ignore
 from typing import Optional, Callable, Tuple, Dict, Any, Union, TYPE_CHECKING, TypeVar, List
 
 from dataclasses import dataclass, field
@@ -12,8 +12,8 @@ import base64
 import io
 import pickle # used strictly for serializing conditioning in the ConditioningToBase64 and Base64ToConditioning nodes for API use. (Offloading T5 processing to another machine to avoid model shuffling.)
 
-import comfy.supported_models
-import node_helpers
+import comfy.supported_models #type: ignore
+import node_helpers #type: ignore
 import gc
 
 
@@ -708,7 +708,7 @@ class EmptyConditioningGenerator:
             self.device = device
             self.dtype  = dtype
         
-            import comfy.supported_models
+            import comfy.supported_models #type: ignore
             self.model_config = model.model.model_config
 
             self.llama3_shape = None
@@ -1464,6 +1464,10 @@ class ClownRegionalConditioning_ABC:
             mask_B = 1-mask_B
         
         mask_AB_inv = mask_C
+        if mask_AB_inv is None and mask_A is not None and mask_B is not None:
+            mask_AB_inv = torch.ones_like(mask_A) - mask_A - mask_B
+            mask_AB_inv[mask_AB_inv < 0] = 0
+
         if invert_mask and mask_AB_inv is not None:
             mask_AB_inv = 1-mask_AB_inv
         
@@ -1581,12 +1585,13 @@ class ClownRegionalConditioning2(ClownRegionalConditioning_AB):
             }
         }
 
-    def main(self, conditioning_masked, conditioning_unmasked, mask, **kwargs):
+    def main(self, conditioning_masked=None, conditioning_unmasked=None, mask=None, **kwargs):
+        mask_B = 1 - mask if mask is not None else None
         return super().main(
             conditioning_A = conditioning_masked,
             conditioning_B = conditioning_unmasked,
-            mask_A         =   mask,
-            mask_B         = 1-mask,
+            mask_A         = mask,
+            mask_B         = mask_B,
             **kwargs
         )    
 
@@ -1618,10 +1623,12 @@ class ClownRegionalConditioning3(ClownRegionalConditioning_ABC):
             }
         }
 
-    def main(self, conditioning_unmasked, mask_A, mask_B, **kwargs):
-        
-        mask_AB_inv = torch.ones_like(mask_A) - mask_A - mask_B
-        mask_AB_inv[mask_AB_inv < 0] = 0
+    def main(self, conditioning_unmasked=None, mask_A=None, mask_B=None, **kwargs):
+        if mask_A is not None and mask_B is not None:
+            mask_AB_inv = torch.ones_like(mask_A) - mask_A - mask_B
+            mask_AB_inv[mask_AB_inv < 0] = 0
+        else:
+            mask_AB_inv = None
         
         return super().main(
             conditioning_C = conditioning_unmasked,
