@@ -1243,7 +1243,7 @@ def get_sigmas(model, scheduler, steps, denoise, lq_inflection_percent=0.5): #ad
     total_steps = steps
     if denoise < 1.0:
         if denoise <= 0.0:
-            return (torch.FloatTensor([]),)
+            return torch.FloatTensor([])
         total_steps = int(steps/denoise)
 
     #model_sampling = model.get_model_object("model_sampling")
@@ -1259,6 +1259,8 @@ def get_sigmas(model, scheduler, steps, denoise, lq_inflection_percent=0.5): #ad
     else:
         sigmas = comfy.samplers.calculate_sigmas(model_sampling, scheduler, total_steps).cpu()
     
+    if isinstance(sigmas, tuple):
+        sigmas = sigmas[0]
     sigmas = sigmas[-(steps + 1):]
     return sigmas
 

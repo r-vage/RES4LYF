@@ -5,6 +5,11 @@ All notable changes to this fork of RES4LYF will be documented in this file.
 ## [Unreleased]
 
 ### Fixed
+- fix: ClownRegionalConditioning2 fails when different regions result in different T5 token lengths (#250/2)
+  - During `merge_with_base`, attention masks (shape `(B, T)`) or other 2D/1D tensor pieces in the info dictionary were not padded to the same token length because `dim=-2` resolved to the batch dimension.
+  - Dynamically resolve the padding dimension based on tensor rank (using `-1` for 2D/1D tensors instead of the default `-2`).
+  - File: `conditioning.py`
+
 - fix: `EmptyConditioningGenerator` missing metadata dict for models without pooled output (#250)
   - The `pooled_len == 0` branch returned `[[tensor]]` instead of `[[tensor, {}]]`
   - ComfyUI expects every conditioning entry to be `[tensor, dict]` — missing dict caused

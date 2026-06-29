@@ -3,7 +3,7 @@ import torch.nn.functional as F #type: ignore
 import math
 
 from torch  import Tensor #type: ignore
-from typing import Optional, Callable, Tuple, Dict, Any, Union, TYPE_CHECKING, TypeVar, List
+from typing import Optional, Callable, Tuple, Dict, Any, Union, TYPE_CHECKING, TypeVar, List, cast
 
 from dataclasses import dataclass, field
 
@@ -209,6 +209,8 @@ class ConditioningTruncate:
             if pooled_output is not None:
                 d["pooled_output"] = d["pooled_output"][:, :2048]
                 n = [t[0][:, :154, :4096], d]
+            else:
+                n = [t[0], d]
             c.append(n)
         return (c, )
 
@@ -815,9 +817,13 @@ class EmptyConditioningGenerator:
     def zero_none_conditionings_(self, *conds):
         if len(conds) == 1 and isinstance(conds[0], (list, tuple)):
             conds = conds[0]
-        for i, cond in enumerate(conds):
-            conds[i] = self.get_empty_conditioning() if cond is None else cond
-        return conds
+        
+        is_list = isinstance(conds, list)
+        conds_list = conds if is_list else list(conds)
+        for i, cond in enumerate(conds_list):
+            conds_list[i] = self.get_empty_conditioning() if cond is None else cond
+        return conds_list if is_list else type(conds)(conds_list)
+
 
 """def zero_conditioning_from_list(conds):
     for cond in conds:
@@ -835,7 +841,8 @@ class EmptyConditioningGenerator:
 
 def zero_conditioning_from_list(conds):
     for cond in conds:
-        if cond is not None:
+        if cond is not None and len(cond) > 0:
+            cond_zero = []
             for i in range(len(cond)):
                 pooled = cond[i][1].get('pooled_output')
                 llama3 = cond[i][1].get('conditioning_llama3')
@@ -843,15 +850,15 @@ def zero_conditioning_from_list(conds):
                 pooled_len = pooled.shape[-1] if pooled is not None else 1
                 llama3_shape = llama3.shape if llama3 is not None else (1, 32, 128, 4096)
 
-                cond_zero = [[
+                cond_zero.append([
                     torch.zeros_like(cond[i][0]),
                     {
                         "pooled_output": torch.zeros((1, pooled_len), dtype=cond[i][0].dtype, device=cond[i][0].device),
                         "conditioning_llama3": torch.zeros(llama3_shape, dtype=cond[i][0].dtype, device=cond[i][0].device),
                     },
-                ]]
-
+                ])
             return cond_zero
+    return None
 
 class TemporalMaskGenerator:
     @classmethod
@@ -1190,7 +1197,8 @@ class ClownRegionalConditioning_AB:
 
         cond = zero_conditioning_from_list([conditioning_A, conditioning_B])
         
-        cond[0][1]['callback_regional'] = callback
+        if cond is not None:
+            cond[0][1]['callback_regional'] = callback
         
         return (cond,)
 
@@ -1231,6 +1239,7 @@ class ClownRegionalConditioning_AB:
         
         if invert_mask and mask is not None:
             mask   = 1-mask
+        if invert_mask and unmask is not None:
             unmask = 1-unmask
 
         floor, floors = region_bleed, region_bleeds
@@ -1318,7 +1327,8 @@ class ClownRegionalConditioning_AB:
         else:
             cond = conditioning_A
             
-        cond[0][1]['RegParam'] = RegionalParameters(weights, floors)
+        if cond is not None:
+            cond[0][1]['RegParam'] = RegionalParameters(weights, floors)
         
         return (cond,)
 
@@ -1414,7 +1424,8 @@ class ClownRegionalConditioning_ABC:
 
         cond = zero_conditioning_from_list([conditioning_A, conditioning_B, conditioning_C])
         
-        cond[0][1]['callback_regional'] = callback
+        if cond is not None:
+            cond[0][1]['callback_regional'] = callback
         
         return (cond,)
 
@@ -1555,7 +1566,8 @@ class ClownRegionalConditioning_ABC:
         else:
             conditioning = conditioning_A
 
-        conditioning[0][1]['RegParam'] = RegionalParameters(weights, floors)
+        if conditioning is not None:
+            conditioning[0][1]['RegParam'] = RegionalParameters(weights, floors)
         
         return (conditioning,)
 
@@ -1585,7 +1597,7 @@ class ClownRegionalConditioning2(ClownRegionalConditioning_AB):
             }
         }
 
-    def main(self, conditioning_masked=None, conditioning_unmasked=None, mask=None, **kwargs):
+    def main(self, conditioning_masked=None, conditioning_unmasked=None, mask=None, **kwargs):  # type: ignore[override]
         mask_B = 1 - mask if mask is not None else None
         return super().main(
             conditioning_A = conditioning_masked,
@@ -1623,7 +1635,7 @@ class ClownRegionalConditioning3(ClownRegionalConditioning_ABC):
             }
         }
 
-    def main(self, conditioning_unmasked=None, mask_A=None, mask_B=None, **kwargs):
+    def main(self, conditioning_unmasked=None, mask_A=None, mask_B=None, **kwargs):  # type: ignore[override]
         if mask_A is not None and mask_B is not None:
             mask_AB_inv = torch.ones_like(mask_A) - mask_A - mask_B
             mask_AB_inv[mask_AB_inv < 0] = 0
@@ -1764,10 +1776,14 @@ class ClownRegionalConditionings:
                                         cond_regions             = cond_regions,
                                         )
 
+        if not cond_regions:
+            return (None,)
+
         cond_list = [region['conditioning'] for region in cond_regions]
         conditioning = zero_conditioning_from_list(cond_list)
         
-        conditioning[0][1]['callback_regional'] = callback
+        if conditioning is not None:
+            conditioning[0][1]['callback_regional'] = callback
         
         return (conditioning,)
 
@@ -1793,6 +1809,9 @@ class ClownRegionalConditionings:
         default_dtype  = torch.float64
         default_device = torch.device("cuda") 
         
+        if not cond_regions:
+            return (None,)
+            
         cond_list               = [region['conditioning']       for region in cond_regions]
         mask_list               = [region['mask']               for region in cond_regions]
         edge_width_list         = [region['edge_width']         for region in cond_regions]
@@ -1824,7 +1843,7 @@ class ClownRegionalConditionings:
 
         sample_cond = next((c for c in cond_list if c is not None), None)
         EmptyCondGen = EmptyConditioningGenerator(model, conditioning=sample_cond)
-        cond_list = EmptyCondGen.zero_none_conditionings_(cond_list)
+        cond_list = cast(List[List[Tuple[torch.Tensor, Dict[str, Any]]]], EmptyCondGen.zero_none_conditionings_(cond_list))
         
         conditioning = copy.deepcopy(cond_list[0])
         
@@ -1862,16 +1881,17 @@ class ClownRegionalConditionings:
             if 'clip_vision_output' in cond[0][1]: # For WAN... dicey results
                 RegContext.add_region_clip_fea(cond[0][1]['clip_vision_output'].penultimate_hidden_states)
             
-        conditioning[0][1]['AttnMask']   = AttnMask
-        conditioning[0][1]['RegContext'] = RegContext
-        conditioning[0][1]['RegParam']   = RegionalParameters(weights, floors)
-        
-        conditioning = merge_with_base(base=conditioning, others=cond_list)
-        
-        if 'pooled_output' in conditioning[0][1] and conditioning[0][1]['pooled_output'] is not None:
-            conditioning[0][1]['pooled_output'] = torch.stack([cond_tmp[0][1]['pooled_output'] for cond_tmp in cond_list]).mean(dim=0)
+        if conditioning is not None:
+            conditioning[0][1]['AttnMask']   = AttnMask
+            conditioning[0][1]['RegContext'] = RegContext
+            conditioning[0][1]['RegParam']   = RegionalParameters(weights, floors)
+            
+            conditioning = merge_with_base(base=conditioning, others=cond_list)
+            
+            if 'pooled_output' in conditioning[0][1] and conditioning[0][1]['pooled_output'] is not None:
+                conditioning[0][1]['pooled_output'] = torch.stack([cond_tmp[0][1]['pooled_output'] for cond_tmp in cond_list]).mean(dim=0)
 
-            #conditioning[0][1]['pooled_output'] = cond_list[0][0][1]['pooled_output']
+                #conditioning[0][1]['pooled_output'] = cond_list[0][0][1]['pooled_output']
 
         return (conditioning,)
 
@@ -1933,7 +1953,11 @@ def merge_with_base(
                     info_i = pos[lvl][1]
                     if key in info_i and isinstance(info_i[key], torch.Tensor):
                         pieces.append(info_i[key])
-            pieces = pad_tensor_list_to_max_len(pieces, dim=dim)
+            # Resolve dim dynamically for 2D/1D tensors (e.g. attention_mask with shape B, T)
+            dim_i = dim
+            if len(val.shape) < 3:
+                dim_i = -1
+            pieces = pad_tensor_list_to_max_len(pieces, dim=dim_i)
             base[lvl][1][key] = sum(pieces)
 
     return base
